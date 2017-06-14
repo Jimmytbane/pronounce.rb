@@ -8,7 +8,20 @@
 player="play"
 
 WORD=$1
-OPTIONTWO=$2
+INDEX=0
+if echo "$2" | grep "\-." > /dev/null
+then
+	OPTION="$2"
+	OUTPUT="$3"
+elif echo "$2" | grep ".$" > /dev/null
+then
+	LIMIT="$2"
+	if [ -n "$3" ]
+	then
+		OPTION="$3"
+		OUTPUT="$4"
+	fi
+fi
 
 wd_pg=/tmp/wt_wd_pg
 fl_pg=/tmp/wt_fl_pg
@@ -32,26 +45,35 @@ do
 
 	FL_URL=$(echo "https:$(cat $fl_url)")
 
-	if [ -n "$OPTIONTWO" ]
+	if [ -n "$OPTION" ]
 	then
-		case "$OPTIONTWO" in
+		case "$OPTION" in
 			-p)
 				ftp -Vo $fl $FL_URL > /dev/null
 				$player $fl
 				;;
 			-o)
-				ftp -Vo "$3" $FL_URL > /dev/null
+				ftp -Vo "$OUTPUT" $FL_URL > /dev/null
 				;;
 			-po)
-				ftp -Vo "$3" $FL_URL > /dev/null
-				$player "$3"	
+				ftp -Vo "$OUTPUT" $FL_URL > /dev/null
+				$player "$OUTPUT"	
 				;;
 		esac
-	elif [ -z "$OPTIONTWO" ]
+	elif [ -z "$OPTION" ]
 	then
-		ftp -V  $FL_URL > dev/null
+		ftp -V  $FL_URL > /dev/null
+	fi
+	if [ -n "$LIMIT" ]
+	then
+		INDEX=$((INDEX+1))
+		if [ $LIMIT -eq $INDEX ]
+		then
+			rm $wd_pg $fl_pg $fl_pg_url $fl_url $fl
+			exit
+		fi
 	fi
 done
 
 # Cleanup
-rm $wd_pg $fl_pg $fl_pg_url $fl_url $fl
+rm $wd_pg $fl_pg $fl_pg_url $fl_url $fl 2> /dev/null
